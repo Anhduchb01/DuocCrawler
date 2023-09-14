@@ -63,9 +63,9 @@ class MongoPipeline(object):
 		string_message = ""
 
 		if action == "Create":
-			string_message = "Start Crawler Page :"
+			string_message = "Create Crawler"
 		elif action == "Success":
-			string_message = "Crawler Success :"
+			string_message = "Crawler Success"
 		elif action == "Error":
 			string_message = message.replace(r"['\"()]", '')
 
