@@ -12,5 +12,6 @@ RUN pip install -r requirements.txt
 
 # copy project
 COPY . .
-# CMD ["celery","-A","app.celery","worker","--loglevel=info"]
-CMD ["python","app.py"]
+# EXPOSE 5000
+
+# CMD ["python","app.py"]
