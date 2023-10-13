@@ -31,16 +31,17 @@ class CustomSplashSpider(scrapy.Spider):
 		self.useSplash = config['useSplash']
 		self.saveToCollection = config['saveToCollection']
 		
-	def formatString(self, text):
-		if isinstance(text, list):  # Check if text is a list
-			text = ' '.join(text)
-		if text is not None :
-			text = text.replace('\r\n','')
-			text = text.replace('\n','')
-			text = "".join(text.rstrip().lstrip())
-		cleaned_text = re.sub(r'[^a-zA-Z0-9À-ỹ\s.,!?]', ' ', str(text))
-		cleaned_string = re.sub(r'\s{2,}', ' ', cleaned_text)
-		return cleaned_string
+	def formatStringContent(self, text):
+		if isinstance(text, list):
+			text = '\n'.join(text)
+		return text
+	def formatTitle(self, text):
+		try :
+			text = re.sub(r'\s{2,}', ' ', text)
+		except Exception as e:
+			print('formatTitle')
+			print(e)
+		return text
 	def check_correct_rules(self, link):
 		if len(self.correct_rules) > 0:
 			for rule in self.correct_rules:
@@ -90,7 +91,7 @@ class CustomSplashSpider(scrapy.Spider):
 			self.visited_links.add(link)
 			yield  SplashRequest(url= link, callback=self.parse, args={"wait": 10,"expand":1,"timeout":90})
 		title = response.css(self.title_query+'::text').get()
-		title = self.formatString(title)
+		title = self.formatTitle(title)
 		if self.timeCreatePostOrigin_query == '' or self.timeCreatePostOrigin_query ==None:
 			timeCreatePostOrigin = ''
 		else:
@@ -111,14 +112,14 @@ class CustomSplashSpider(scrapy.Spider):
 			
 		else:
 			summary = response.css(self.summary_query+'::text').get()
-			summary = self.formatString(summary)
+			summary = self.formatStringContent(summary)
 			summary_html = response.css(self.summary_html_query).get()
 		if self.content_query == '' or self.content_query ==None:
 			content = ''
 			content_html =''
 		else:
 			content = response.css(self.content_query+' ::text').getall()
-			content = self.formatString(content)
+			content = self.formatStringContent(content)
 			content_html = response.css(self.content_html_query).get()
 		item = DuocItem(
 			title=title,

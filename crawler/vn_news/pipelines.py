@@ -28,8 +28,11 @@ class MongoPipeline(object):
 		)
 
 	def open_spider(self, spider):
+		print('Start crawling! ',spider.namePage)
 		self.client = pymongo.MongoClient(self.mongo_uri)
 		self.db = self.client[self.mongo_db]
+		self.db.crawlers.update_one({'addressPage': spider.namePage}, {'$set': {'increasePost': 0}})
+		print(self.db.crawlers.find_one({'addressPage': spider.namePage}))
 
 	def process_item(self, item, spider):
 		name = item.__class__.__name__

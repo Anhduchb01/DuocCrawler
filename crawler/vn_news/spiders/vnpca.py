@@ -47,24 +47,25 @@ class VnpcaSpider(scrapy.Spider):
 				next_page_link = response.url.replace(f"?page={self.current_page}", f"?page={next_page}")
 				self.current_page = next_page
 				yield scrapy.Request(next_page_link, callback=self.parse)
-			else:
-				print("No more article links to follow. Stopping the spider.")
-				self.crawler.engine.close_spider(self, 'No more articles to scrape')
-	def formatString(self, text):
-		if isinstance(text, list):  # Check if text is a list
-			text = ' '.join(text)
-		if text is not None :
-			text = text.replace('\r\n','')
-			text = text.replace('\n','')
-			text = "".join(text.rstrip().lstrip())
-		cleaned_text = re.sub(r'[^a-zA-Z0-9À-ỹ\s.,!?]', ' ', str(text))
-		cleaned_string = re.sub(r'\s{2,}', ' ', cleaned_text)
-		return cleaned_string
+			# else:
+			# 	print("No more article links to follow. Stopping the spider.")
+			# 	self.crawler.engine.close_spider(self, 'No more articles to scrape')
+	def formatStringContent(self, text):
+		if isinstance(text, list):
+			text = '\n'.join(text)
+		return text
+	def formatTitle(self, text):
+		try :
+			text = re.sub(r'\s{2,}', ' ', text)
+		except Exception as e:
+			print('formatTitle')
+			print(e)
+		return text
 	def parse_article(self, response):
 		# Extract information from the news article page
 		title = response.css(self.title_query+'::text').get()
 		title = " ".join(title.split())
-		title = self.formatString(title)
+		title = self.formatTitle(title)
 		timeCreatePostOrigin = response.css(self.timeCreatePostOrigin_query+'::text').get()
 		timeCreatePostOrigin = timeCreatePostOrigin.replace('[','')
 		timeCreatePostOrigin = timeCreatePostOrigin.replace(']','')
@@ -75,12 +76,11 @@ class VnpcaSpider(scrapy.Spider):
 			print('Do Not convert to datetime')
 			print(e)
 		summary = response.css(self.summary_query+'::text').get()
-		summary = self.formatString(summary)
+		summary = self.formatStringContent(summary)
 		summary_html = response.css(self.summary_html_query).get()
 
 		content = response.css(self.content_query+'::text').getall()
-		content = ''.join(content).strip()
-		content = self.formatString(content)
+		content = self.formatStringContent(content)
 		content_html = response.css(self.content_html_query).get()
 		item = DuocItem(
 			title=title,

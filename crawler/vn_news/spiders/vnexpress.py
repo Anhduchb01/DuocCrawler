@@ -33,35 +33,34 @@ class VnexpressSpider(scrapy.Spider):
 			yield scrapy.Request(link, callback=self.parse_article)
 
 		# Increment the page number and follow the next page
-		if self.current_page == 1:
-			self.current_page +=1
-			next_page_link = response.url + f"-p{self.current_page}"
+		if self.response.url == 'https://vnexpress.net/tag/duoc-pham-756653' or self.response.url == 'https://vnexpress.net/tag/nha-thuoc-100130':
+			next_page_link = response.url + f"-p2"
 			yield scrapy.Request(next_page_link, callback=self.parse)
 		else: 
 			if len(article_links)>0:
-				print('page',self.current_page)
 				self.current_page = int(response.url.split('-p')[-1])
+				print('current_page',self.current_page)
 				next_page = self.current_page + 1
 				next_page_link = response.url.replace(f"-p{self.current_page}", f"-p{next_page}")
-				self.current_page = next_page
 				yield scrapy.Request(next_page_link, callback=self.parse)
-			else:
-				print("No more article links to follow. Stopping the spider.")
-				self.crawler.engine.close_spider(self, 'No more articles to scrape')
-	def formatString(self, text):
-		if isinstance(text, list):  # Check if text is a list
-			text = ' '.join(text)
-		if text is not None :
-			text = text.replace('\r\n','')
-			text = text.replace('\n','')
-			text = "".join(text.rstrip().lstrip())
-		cleaned_text = re.sub(r'[^a-zA-Z0-9À-ỹ\s.,!?]', ' ', str(text))
-		cleaned_string = re.sub(r'\s{2,}', ' ', cleaned_text)
-		return cleaned_string
+			# else:
+			# 	print("No more article links to follow. Stopping the spider.")
+			# 	self.crawler.engine.close_spider(self, 'No more articles to scrape')
+	def formatStringContent(self, text):
+		if isinstance(text, list):
+			text = '\n'.join(text)
+		return text
+	def formatTitle(self, text):
+		try :
+			text = re.sub(r'\s{2,}', ' ', text)
+		except Exception as e:
+			print('formatTitle')
+			print(e)
+		return text
 	def parse_article(self, response):
 		# Extract information from the news article page
 		title = response.css(self.title_query+'::text').get()
-		title = self.formatString(title)
+		title = self.formatTitle(title)
 		
 		timeCreatePostOrigin = response.css(self.timeCreatePostOrigin_query+'::text').get()
 		
@@ -85,9 +84,8 @@ class VnexpressSpider(scrapy.Spider):
 		# summary = self.formatString(summary)
 		# summary_html = response.css(self.summary_html_query).get()
 
-		content = response.css(self.content_query).getall()
-		content = ''.join(content).strip()
-		content = self.formatString(content)
+		content = response.css(self.content_query+' ::text').getall()
+		content = self.formatStringContent(content)
 		content_html = response.css(self.content_html_query).get()
 		print(title)
 		# Create a CafefItem instance containing the information
@@ -103,7 +101,6 @@ class VnexpressSpider(scrapy.Spider):
 			url=response.url
 		)
 		if title == '' or title ==None or content =='' or content == None :
-			print('NONE')
 			yield None
 		else :
 			yield item
