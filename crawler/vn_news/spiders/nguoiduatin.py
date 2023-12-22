@@ -22,7 +22,10 @@ class NguoiDuaTinSpider(scrapy.Spider):
 		self.summary_html_query = config['summary_html_query']
 
 		self.origin_domain = 'https://www.nguoiduatin.vn'
-		self.start_urls = ['https://www.nguoiduatin.vn/tag-ajax/34687/layout/desktop/page/1']
+		# self.start_urls = ['https://www.nguoiduatin.vn/tag-ajax/34687/layout/desktop/page/1']
+		self.start_urls = config['start_urls']
+		print('start_url',self.start_urls)
+		self.industry = config['industry']
 		self.current_page = 1
 		self.saveToCollection = config['saveToCollection']
 	def parse(self, response):
@@ -86,7 +89,9 @@ class NguoiDuaTinSpider(scrapy.Spider):
 			summary_html = summary_html,
 			content_html = content_html,
 			urlPageCrawl= 'nguoiduatin',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None

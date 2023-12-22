@@ -22,9 +22,12 @@ class VnexpressSpider(scrapy.Spider):
 		self.summary_html_query = config['summary_html_query']
 
 		self.origin_domain = 'https://vnexpress.net/'
-		self.start_urls = ['https://vnexpress.net/tag/duoc-pham-756653','https://vnexpress.net/tag/nha-thuoc-100130']
+		# self.start_urls = ['https://vnexpress.net/tag/duoc-pham-756653','https://vnexpress.net/tag/nha-thuoc-100130']
+		self.start_urls = config['start_urls']
+		print('start_url',self.start_urls)
 		self.current_page = 1
 		self.saveToCollection = config['saveToCollection']
+		self.industry = config['industry']
 	def parse(self, response):
 		# Extract news article URLs from the page
 		article_links = response.css(self.article_url_query+'::attr(href)').getall()
@@ -33,7 +36,7 @@ class VnexpressSpider(scrapy.Spider):
 			yield scrapy.Request(link, callback=self.parse_article)
 
 		# Increment the page number and follow the next page
-		if self.response.url == 'https://vnexpress.net/tag/duoc-pham-756653' or self.response.url == 'https://vnexpress.net/tag/nha-thuoc-100130':
+		if response.url == 'https://vnexpress.net/tag/duoc-pham-756653' or response.url == 'https://vnexpress.net/tag/nha-thuoc-100130':
 			next_page_link = response.url + f"-p2"
 			yield scrapy.Request(next_page_link, callback=self.parse)
 		else: 
@@ -98,7 +101,9 @@ class VnexpressSpider(scrapy.Spider):
 			summary_html= '',
 			content_html= content_html,
 			urlPageCrawl= 'vnexpress',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None

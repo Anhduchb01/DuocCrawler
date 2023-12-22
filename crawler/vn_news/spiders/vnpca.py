@@ -22,10 +22,12 @@ class VnpcaSpider(scrapy.Spider):
 		self.summary_html_query = config['summary_html_query']
 
 		self.origin_domain = 'https://vnpca.org.vn'
-		self.start_urls = ['https://vnpca.org.vn/tin-tuc-su-kien', ]
+		# self.start_urls = ['https://vnpca.org.vn/tin-tuc-su-kien', ]
+		self.start_urls = config['start_urls']
 		self.current_page = 0
 		self.saveToCollection = config['saveToCollection']
-
+		print('start_url',self.start_urls)
+		self.industry = config['industry']
 	def parse(self, response):
 		# Extract news article URLs from the page
 		article_links = response.css(self.article_url_query+'::attr(href)').getall()
@@ -90,7 +92,9 @@ class VnpcaSpider(scrapy.Spider):
 			summary_html = summary_html,
 			content_html = content_html,
 			urlPageCrawl= 'vnpca',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		
 		# Return the item

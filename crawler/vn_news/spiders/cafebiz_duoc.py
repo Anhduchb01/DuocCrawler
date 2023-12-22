@@ -21,9 +21,12 @@ class CafebizDuocSpider(scrapy.Spider):
 		self.summary_html_query = config['summary_html_query']
 
 		self.origin_domain = 'https://cafebiz.vn'
-		self.start_urls = [
-		'https://cafebiz.vn/timelinetag/duoc-pham/1.htm', 'https://cafebiz.vn/timelinetag/duoc/1.htm','https://cafebiz.vn/timelinetag/thuoc/1.htm','https://cafebiz.vn/timelinetag/nha-thuoc/1.htm'
-	]
+		self.start_urls = config['start_urls']
+		print('start_url',self.start_urls)
+		# self.start_urls = [
+		# 'https://cafebiz.vn/timelinetag/duoc-pham/1.htm', 'https://cafebiz.vn/timelinetag/duoc/1.htm','https://cafebiz.vn/timelinetag/thuoc/1.htm','https://cafebiz.vn/timelinetag/nha-thuoc/1.htm'
+		# ]
+		self.industry = config['industry']
 		self.current_page = 1
 		self.saveToCollection = config['saveToCollection']
 	def parse(self, response):
@@ -85,7 +88,9 @@ class CafebizDuocSpider(scrapy.Spider):
 			summary_html=summary_html,
 			content_html = content_html,
 			urlPageCrawl= 'cafebiz',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None

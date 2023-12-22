@@ -22,9 +22,12 @@ class ThanhNienSpider(scrapy.Spider):
 		self.summary_html_query = config['summary_html_query']
 
 		self.origin_domain = 'https://thanhnien.vn'
-		self.start_urls = ['https://thanhnien.vn/timelinetag/duoc-pham/1.htm','https://thanhnien.vn/timelinetag/duoc/1.htm','https://thanhnien.vn/timelinetag/thuoc/1.htm','https://thanhnien.vn/timelinetag/nha-thuoc/1.htm']
+		# self.start_urls = ['https://thanhnien.vn/timelinetag/duoc-pham/1.htm','https://thanhnien.vn/timelinetag/duoc/1.htm','https://thanhnien.vn/timelinetag/thuoc/1.htm','https://thanhnien.vn/timelinetag/nha-thuoc/1.htm']
+		self.start_urls = config['start_urls']
+		print('start_url',self.start_urls)
 		self.current_page = 1
 		self.saveToCollection = config['saveToCollection']
+		self.industry = config['industry']
 	def parse(self, response):
 		# Extract news article URLs from the page
 		article_links = response.css(self.article_url_query+'::attr(href)').getall()
@@ -87,7 +90,9 @@ class ThanhNienSpider(scrapy.Spider):
 			summary_html = summary_html,
 			content_html = content_html,
 			urlPageCrawl= 'thanhnien',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None

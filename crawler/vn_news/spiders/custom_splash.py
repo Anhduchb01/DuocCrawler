@@ -30,7 +30,7 @@ class CustomSplashSpider(scrapy.Spider):
 		self.namePage = config['namePage']
 		self.useSplash = config['useSplash']
 		self.saveToCollection = config['saveToCollection']
-		
+		self.industry = config['industry']
 	def formatStringContent(self, text):
 		if isinstance(text, list):
 			text = '\n'.join(text)
@@ -90,15 +90,16 @@ class CustomSplashSpider(scrapy.Spider):
 		for link in news_links:
 			self.visited_links.add(link)
 			yield  SplashRequest(url= link, callback=self.parse, args={"wait": 10,"expand":1,"timeout":90})
-		title = response.css(self.title_query+'::text').get()
+		title = response.css(self.title_query+' ::text').get()
 		title = self.formatTitle(title)
 		if self.timeCreatePostOrigin_query == '' or self.timeCreatePostOrigin_query ==None:
 			timeCreatePostOrigin = ''
+			timeCreatePostRaw = ''
 		else:
-			timeCreatePostOrigin = response.css(self.timeCreatePostOrigin_query+'::text').get()
-			timeCreatePostOrigin = re.sub(r'\s{2,}', ' ', str(timeCreatePostOrigin))
+			timeCreatePostRaw  = response.css(self.timeCreatePostOrigin_query+' ::text').get()
+		
 		try :
-			timeCreatePostOrigin  = convert_to_custom_format(timeCreatePostOrigin)
+			timeCreatePostOrigin  = convert_to_custom_format(timeCreatePostRaw)
 		except Exception as e: 
 			timeCreatePostOrigin = None
 			print('Do Not convert to datetime')
@@ -111,7 +112,7 @@ class CustomSplashSpider(scrapy.Spider):
 			summary_html =''
 			
 		else:
-			summary = response.css(self.summary_query+'::text').get()
+			summary = response.css(self.summary_query+' ::text').get()
 			summary = self.formatStringContent(summary)
 			summary_html = response.css(self.summary_html_query).get()
 		if self.content_query == '' or self.content_query ==None:
@@ -124,13 +125,16 @@ class CustomSplashSpider(scrapy.Spider):
 		item = DuocItem(
 			title=title,
 			timeCreatePostOrigin=timeCreatePostOrigin,
+			timeCreatePostRaw = timeCreatePostRaw,
 			author = self.namePage,
 			summary=summary,
 			content=content,
 			summary_html=summary_html,
 			content_html = content_html,
 			urlPageCrawl= self.namePage,
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None

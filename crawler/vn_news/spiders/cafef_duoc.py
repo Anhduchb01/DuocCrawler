@@ -5,7 +5,7 @@ import re
 class CafefDuocSpider(scrapy.Spider):
 	name = 'cafef'
 	allowed_domains = ['cafef.vn']
-	start_urls  = ['https://cafef.vn/duoc-pham/trang-1.html','https://cafef.vn/duoc/trang-1.html','https://cafef.vn/thuoc/trang-1.html' ,'https://cafef.vn/nha-thuoc/trang-1.html']
+	# start_urls  = ['https://cafef.vn/duoc-pham/trang-1.html','https://cafef.vn/duoc/trang-1.html','https://cafef.vn/thuoc/trang-1.html' ,'https://cafef.vn/nha-thuoc/trang-1.html']
 	def __init__(self,config=None, *args, **kwargs):
 		super(CafefDuocSpider, self).__init__(*args, **kwargs)
 		self.items_crawled = 0
@@ -24,6 +24,9 @@ class CafefDuocSpider(scrapy.Spider):
 		self.current_page = 1
 		self.namePage = 'cafef'
 		self.saveToCollection = config['saveToCollection']
+		self.start_urls = config['start_urls']
+		print('start_url',self.start_urls)
+		self.industry = config['industry']
 
 	def parse(self, response):
 		print('START CRAWL CAFEF')
@@ -86,7 +89,9 @@ class CafefDuocSpider(scrapy.Spider):
 			summary_html= summary_html,
 			content_html = content_html,
 			urlPageCrawl= 'cafef',
-			url=response.url
+			url=response.url,
+			industry=self.industry,
+			status='0'
 		)
 		if title == '' or title ==None or content =='' or content == None :
 			yield None
