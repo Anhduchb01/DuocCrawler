@@ -27,6 +27,7 @@ from rq import Queue, Connection
 from bson.json_util import dumps, loads
 load_dotenv()
 DB_URL = os.environ.get('DB_URL')
+print('DB_URL',DB_URL)
 DB_Name = os.environ.get('DB_Name')
 SPLASH_URL = os.environ.get('SPLASH_URL')
 client = MongoClient(DB_URL)
@@ -216,9 +217,10 @@ def create_crawler():
 def remove_crawler():
 	try:
 		name_page = request.json["namePage"]
-		config_default_crawlers_collection.delete_one({"titlePage": name_page})
-		crawlers_collection.delete_one({"addressPage": name_page})
-		config_crawlers_collection.delete_one({"namePage": name_page})
+		industry = request.json["industry"]
+		config_default_crawlers_collection.delete_one({"titlePage": name_page,"industry":industry})
+		crawlers_collection.delete_one({"addressPage": name_page,"industry":industry})
+		config_crawlers_collection.delete_one({"namePage": name_page,"industry":industry})
 		return "remove crawler success"
 
 	except Exception as err:
@@ -380,7 +382,7 @@ def crawl():
 	if crawler_info['statusPageCrawl'] == 'Pending':
 		return  jsonify({"msg":"Crawler is running","namePage":namePage,"industry":industry}), 200
 	else:
-		db.crawlers.update_one({"addressPage": namePage},{"$set": {"statusPageCrawl": "Pending"}})
+		db.crawlers.update_one({"addressPage": namePage,"industry":industry},{"$set": {"statusPageCrawl": "Pending"}})
 		task = crawl_new.delay(namePage,industry)
 		return jsonify({"msg":"excute successfully crawler","namePage":namePage,"industry":industry,"task_id": task.id}), 200
 @crawler.route("/tasks/<task_id>", methods=["GET"])
@@ -556,25 +558,19 @@ def crawl_new(namePage,industry):
 		db.crawlers.update_one({"addressPage": namePage},{"$set": {"statusPageCrawl": "Error"}})
 		save_logger_crawler(namePage,industry,"Error",msg)
 		return str(msg)
-import logging
-logging.basicConfig(
-	level=logging.INFO,
-	format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-	filename='app.log',  # Specify the log file
-	filemode='a'  # Append to the log file
-)
+
 def add_job_crawl(namePage,industry):
 	try:
-		logging.info(f'Job is running for {namePage}')
+		print(f'Job is running for {namePage}')
 		crawler_info = db.crawlers.find_one({'addressPage': namePage,'industry':industry})
 		if crawler_info['statusPageCrawl'] == 'Pending':
-			logging.info(f'Job is running for {namePage} {industry}')
+			print(f'Job is running for {namePage} {industry}')
 		else:
 			db.crawlers.update_one({"addressPage": namePage,'industry':industry},{"$set": {"statusPageCrawl": "Pending"}})
 			task = crawl_new.delay(namePage,industry)
 			print('task crawler', task.id)
 	except Exception as e:
-		logging.error(f'Error in add_job_crawl: {str(e)}')
+		print(f'Error in add_job_crawl: {str(e)}')
 
 #Scheduler
 scheduler = BackgroundScheduler()
@@ -582,19 +578,19 @@ scheduler.start()
 def configure_scheduler(namePage,industry):
 	crawler_info = config_crawlers_collection.find_one({'namePage': namePage,'industry':industry})
 	schedule = crawler_info['timeSchedule']  # Replace this with your schedule data
-	logging.info(f'Add job {namePage}')
+	print(f'Add job {namePage}')
 	for entry in schedule:
 		for hour in entry['hour']:
 			days_of_week = int(entry['day'])
 			scheduler.add_job(add_job_crawl, 'cron', id=f'{namePage}_{industry}_{entry["day"]}_{hour}', replace_existing=True, args=[namePage,industry], day_of_week=days_of_week, hour=hour)
-	logging.info(f'Scheduler : {scheduler.get_jobs()}')
+	print(f'Scheduler : {scheduler.get_jobs()}')
 def remove_scheduler(namePage,industry):
-	logging.info(f'Remove job {namePage} {industry}')
+	print(f'Remove job {namePage} {industry}')
 	namejob = f"{namePage}_{industry}"
 	jobs_to_remove = [job for job in scheduler.get_jobs() if namejob in job.id]
 	for job in jobs_to_remove:
 		scheduler.remove_job(job.id)
-	logging.info(f'Scheduler after remove: {scheduler.get_jobs()}')
+	print(f'Scheduler after remove: {scheduler.get_jobs()}')
 
 def save_logger_crawler(page,industry,action,message):
 	time_crawl_page = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
