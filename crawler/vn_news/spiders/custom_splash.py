@@ -13,13 +13,13 @@ class CustomSplashSpider(scrapy.Spider):
 		self.items_crawled = 0
 		self.last_date = config["last_date"]
 		
-		self.title_query = config['title_query']
-		self.timeCreatePostOrigin_query = config['timeCreatePostOrigin_query']
-		self.author_query = config['author_query']
-		self.content_query =config['content_query']
-		self.summary_query = config['summary_query']
-		self.content_html_query = config['content_html_query']
-		self.summary_html_query = config['summary_html_query']
+		self.title_query = self.formatQuery(config['title_query'])
+		self.timeCreatePostOrigin_query = self.formatQuery(config['timeCreatePostOrigin_query'])
+		self.author_query = self.formatQuery(config['author_query'])
+		self.content_query = self.formatQuery(config['content_query'])
+		self.summary_query = self.formatQuery(config['summary_query'])
+		self.content_html_query = self.formatQuery(config['content_html_query'])
+		self.summary_html_query = self.formatQuery(config['summary_html_query'])
 
 		self.origin_domain = config['origin_domain']
 		self.start_urls = config['start_urls']
@@ -31,6 +31,12 @@ class CustomSplashSpider(scrapy.Spider):
 		self.useSplash = config['useSplash']
 		self.saveToCollection = config['saveToCollection']
 		self.industry = config['industry']
+	
+	def formatQuery(self, query):
+		query = str(query).strip()
+		query = query.replace(">"," ")
+		query = ' '.join(query.split())
+		return query
 	def formatStringContent(self, text):
 		if isinstance(text, list):
 			text = '\n'.join(text)

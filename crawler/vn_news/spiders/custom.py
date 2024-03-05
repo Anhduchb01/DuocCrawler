@@ -15,13 +15,13 @@ class CustomSpider(scrapy.Spider):
 		print('config',config)
 		self.last_date = config["last_date"]
 		
-		self.title_query = config['title_query']
-		self.timeCreatePostOrigin_query = config['timeCreatePostOrigin_query']
-		self.author_query = config['author_query']
-		self.content_query =config['content_query']
-		self.summary_query = config['summary_query']
-		self.content_html_query = config['content_html_query']
-		self.summary_html_query = config['summary_html_query']
+		self.title_query = self.formatQuery(config['title_query'])
+		self.timeCreatePostOrigin_query = self.formatQuery(config['timeCreatePostOrigin_query'])
+		self.author_query = self.formatQuery(config['author_query'])
+		self.content_query = self.formatQuery(config['content_query'])
+		self.summary_query = self.formatQuery(config['summary_query'])
+		self.content_html_query = self.formatQuery(config['content_html_query'])
+		self.summary_html_query = self.formatQuery(config['summary_html_query'])
 
 		self.origin_domain = config['origin_domain']
 		self.start_urls = config['start_urls']
@@ -33,6 +33,13 @@ class CustomSpider(scrapy.Spider):
 		self.useSplash = config['useSplash']
 		self.saveToCollection = config['saveToCollection']
 		self.industry = config['industry']
+	
+	def formatQuery(self, query):
+		query = str(query).strip()
+		query = query.replace(">"," ")
+		query = ' '.join(query.split())
+		return query
+	
 	def formatStringContent(self, text):
 		if isinstance(text, list):
 			text = '\n'.join(text)
@@ -86,7 +93,6 @@ class CustomSpider(scrapy.Spider):
 		news_links = [
 			link.url for link in list_links if self.should_follow_link(link.url)
 		]
-		print('news_links',news_links)
 		for link in news_links:
 			self.visited_links.add(link)
 			if self.useSplash:
@@ -100,7 +106,6 @@ class CustomSpider(scrapy.Spider):
 		next_page_links = [
 			link.url for link in list_page_links if self.should_follow_link(link.url)
 		]
-		print('next_page_links',next_page_links)
 		for next_page_link in next_page_links:
 			if next_page_link not in self.visited_links:
 				if self.useSplash:
@@ -116,10 +121,7 @@ class CustomSpider(scrapy.Spider):
 			timeCreatePostRaw = ''
 		else:
 			timeCreatePostRaw = ' '.join(response.css(self.timeCreatePostOrigin_query+' ::text').getall())
-			timeCreatePostRaw = str(timeCreatePostRaw).strip()
-			print('timeCreatePostRaw',str(timeCreatePostRaw))
-
-			
+			timeCreatePostRaw = str(timeCreatePostRaw).strip()		
 		try :
 			timeCreatePostOrigin  = convert_to_custom_format(timeCreatePostRaw)
 		except Exception as e: 
